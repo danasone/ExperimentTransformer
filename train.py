@@ -5,7 +5,7 @@ from transformers import AutoTokenizer
 from dataset import GLUEDataModule
 from pl_module import TransformerModel
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, TQDMProgressBar
 from pytorch_lightning.loggers import TensorBoardLogger
 
 
@@ -25,11 +25,12 @@ if __name__ == "__main__":
     
     checkpoint_callback = ModelCheckpoint(monitor=f"val_{conf.metric}", mode='max')
     lr_monitor = LearningRateMonitor(logging_interval='step')
+    tqdm_progress = TQDMProgressBar(refresh_rate=conf.trainer.log_steps)
     logger = TensorBoardLogger(save_dir=os.getcwd(), name="lightning_logs")
     trainer = pl.Trainer(max_epochs=conf.num_epoch,
                         accelerator=conf.trainer.accelerator,
                         accumulate_grad_batches=conf.trainer.accumulate,
-                        callbacks=[checkpoint_callback, lr_monitor],
+                        callbacks=[checkpoint_callback, lr_monitor, tqdm_progress],
                         logger=logger,
                         log_every_n_steps=conf.trainer.log_steps)
     trainer.fit(model, data_module)
