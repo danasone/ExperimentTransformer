@@ -2,6 +2,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchmetrics
 import pytorch_lightning as pl
 from modeling import PositionalEncoding
 
@@ -22,7 +23,7 @@ class TransformerModel(pl.LightningModule):
             self.metric = torchmetrics.MatthewsCorrCoef('binary')
         
 
-    def forward(self, x, mask):
+    def forward(self, x):
         x = self.encoder(x) * math.sqrt(self.d_model)
         x = self.pos_encoder(x)
         x = self.transformer_encoder(x)
