@@ -4,15 +4,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
 import pytorch_lightning as pl
-from modeling import PositionalEncoding
+from modeling import PositionalEncoding, MultiheadAttention, LinearHeadAttention, TransformerEncoderLayer, TransformerEncoder
 
 class TransformerModel(pl.LightningModule):
     def __init__(self, conf):
         super().__init__()
         self.pos_encoder = PositionalEncoding(conf.model.d_model, conf.model.dropout)
         self.encoder = nn.Embedding(conf.model.vocab_size, conf.model.d_model)
-        encoder_layers = nn.TransformerEncoderLayer(conf.model.d_model, conf.model.num_heads, conf.model.dim_feedforward, conf.model.dropout, batch_first=True)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, conf.model.num_layers)
+        assert conf.model.attention in ['full', 'linear']
+        if conf.model.attention == 'full':
+            attn = MultiheadAttention(conf.model.d_model, conf.model.num_heads)
+        elif conf.model.attention == 'linear':
+            attn = LinearHeadAttention(conf.model.d_model, conf.model.num_heads, activation=lambda x: F.elu(x) + 1)
+        encoder_layer = TransformerEncoderLayer(attn, conf.model.d_model, conf.model.dim_feedforward, conf.model.dropout)
+        self.transformer_encoder = TransformerEncoder(encoder_layer, conf.model.num_layers)
         self.d_model = conf.model.d_model
         self.fc = nn.Linear(conf.model.d_model, conf.model.num_classes)
         self.conf = conf
