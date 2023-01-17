@@ -50,7 +50,7 @@ class MultiheadAttention(nn.Module):
         V = V.view(B, -1, self.num_heads, self.head_dim).permute(0,2,1,3)
         
         K = K.permute(0,1,3,2)
-        QK = torch.matmul(Q, K) / torch.sqrt(self.head_dim)
+        QK = torch.matmul(Q, K) / math.sqrt(self.head_dim)
         
         A = torch.matmul(self.activation(QK), V)
         A = A.permute(0,2,1,3)  
