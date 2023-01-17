@@ -7,6 +7,7 @@ max_length: 512
 num_epoch: 10
 
 model:
+  attention: "full"
   num_classes: 2
   d_model: 256
   num_heads: 4
