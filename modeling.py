@@ -35,7 +35,6 @@ class MultiheadAttention(nn.Module):
         self.linear_k = nn.Linear(embed_dim, embed_dim)
         self.linear_v = nn.Linear(embed_dim, embed_dim)
         self.linear_o = nn.Linear(embed_dim, embed_dim)
-        self.scale = torch.sqrt(torch.FloatTensor([self.head_dim]))
         self.activation = activation
         
         
@@ -51,7 +50,7 @@ class MultiheadAttention(nn.Module):
         V = V.view(B, -1, self.num_heads, self.head_dim).permute(0,2,1,3)
         
         K = K.permute(0,1,3,2)
-        QK = torch.matmul(Q, K) / self.scale
+        QK = torch.matmul(Q, K) / torch.sqrt(self.head_dim)
         
         A = torch.matmul(self.activation(QK), V)
         A = A.permute(0,2,1,3)  
