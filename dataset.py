@@ -22,7 +22,7 @@ class GLUEDataModule(pl.LightningDataModule):
         self.dataset = load_dataset("glue", conf.task)
         self.conf = conf
         self.tokenizer = tokenizer
-        self.collator = DataCollatorWithPadding(self.tokenizer, max_length=conf.max_length)
+        self.collator = DataCollatorWithPadding(self.tokenizer, max_length=conf.max_length, padding='max_length')
 
     def setup(self, stage: str):
         self.train_ds = GLUEDataset(self.dataset['train'], self.tokenizer)
