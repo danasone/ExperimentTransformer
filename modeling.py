@@ -3,6 +3,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import bitsandbytes as bnb
 
 def _get_clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
@@ -25,16 +26,21 @@ class PositionalEncoding(nn.Module):
     
 
 class MultiheadAttention(nn.Module):
-    def __init__(self, embed_dim, num_heads, activation=lambda x: torch.softmax(x, dim=-1)):
+    def __init__(self, embed_dim, num_heads, precision=32, activation=lambda x: torch.softmax(x, dim=-1)):
         super().__init__()
         self.num_heads = num_heads
         self.embed_dim = embed_dim
         self.head_dim = embed_dim // num_heads
-        
-        self.linear_q = nn.Linear(embed_dim, embed_dim)
-        self.linear_k = nn.Linear(embed_dim, embed_dim)
-        self.linear_v = nn.Linear(embed_dim, embed_dim)
-        self.linear_o = nn.Linear(embed_dim, embed_dim)
+        if precision == 8:
+            self.linear_q = bnb.nn.Linear8bitLt(embed_dim, embed_dim, bias=True, has_fp16_weights=True, threshold=6.0)
+            self.linear_k = bnb.nn.Linear8bitLt(embed_dim, embed_dim, bias=True, has_fp16_weights=True, threshold=6.0)
+            self.linear_v = bnb.nn.Linear8bitLt(embed_dim, embed_dim, bias=True, has_fp16_weights=True, threshold=6.0)
+            self.linear_o = bnb.nn.Linear8bitLt(embed_dim, embed_dim, bias=True, has_fp16_weights=True, threshold=6.0)
+        else:
+            self.linear_q = nn.Linear(embed_dim, embed_dim)
+            self.linear_k = nn.Linear(embed_dim, embed_dim)
+            self.linear_v = nn.Linear(embed_dim, embed_dim)
+            self.linear_o = nn.Linear(embed_dim, embed_dim)
         self.activation = activation
         
         
@@ -86,11 +92,15 @@ class LinearHeadAttention(MultiheadAttention):
     
     
 class TransformerEncoderLayer(nn.Module):
-    def __init__(self, attn, d_model, dim_feedforward, dropout):
+    def __init__(self, attn, d_model, dim_feedforward, dropout, precision=32):
         super().__init__()
         self.self_attn = attn
-        self.linear_in = nn.Linear(d_model, dim_feedforward)
-        self.linear_out = nn.Linear(dim_feedforward, d_model)
+        if precision == 8:
+            self.linear_in = bnb.nn.Linear8bitLt(d_model, dim_feedforward, bias=True, has_fp16_weights=True, threshold=6.0)
+            self.linear_out = bnb.nn.Linear8bitLt(dim_feedforward, d_model, bias=True, has_fp16_weights=True, threshold=6.0)
+        else:
+            self.linear_in = nn.Linear(d_model, dim_feedforward)
+            self.linear_out = nn.Linear(dim_feedforward, d_model)
         self.norm_in = nn.LayerNorm(d_model)
         self.norm_out = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
