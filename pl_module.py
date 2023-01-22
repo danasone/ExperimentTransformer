@@ -93,7 +93,7 @@ class DebertaModel(TransformerModel):
     def __init__(self, conf, path):
         super().__init__(conf)
         deberta_config = DebertaV2Config.from_pretrained(path)
-        deberta_config.num_labels = num_classes
+        deberta_config.num_labels = conf.model.num_classes
         self.encoder = DebertaV2ForSequenceClassification(deberta_config)
         if conf.precision == 8:
             self.encoder = replace_8bit_linear(self.encoder)
