@@ -97,7 +97,7 @@ class DebertaModel(TransformerModel):
         self.encoder = DebertaV2ForSequenceClassification(deberta_config)
         if conf.precision == 8:
             self.encoder = replace_8bit_linear(self.encoder)
-        self.encoder.load_state_dict(torch.load(os.path.join(path, 'pytorch_model.bin')))
+        self.encoder.load_state_dict(torch.load(os.path.join(path, 'pytorch_model.bin')), strict=False)
         self.conf = conf
         assert conf.metric in ['accuracy', 'mcc']
         if conf.metric == 'accuracy':
