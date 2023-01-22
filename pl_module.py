@@ -1,4 +1,5 @@
 import math
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -79,6 +80,12 @@ def replace_8bit_linear(model, threshold=6.0, module_to_not_convert="lm_head"):
                     has_fp16_weights=True,
                     threshold=threshold,
                 )
+        if isinstance(module, nn.Embedding) and name != module_to_not_convert:
+            with init_empty_weights():
+                model._modules[name] = bnb.nn.StableEmbedding(
+                    module.num_embeddings,
+                    module.embedding_dim
+                )        
     return model
     
     
@@ -88,6 +95,7 @@ class DebertaModel(TransformerModel):
         self.encoder = DebertaV2ModelForSequenceClassification(DebertaV2Config.from_pretrained(path), num_classes=conf.model.num_classes)
         if conf.precision == 8:
             self.encoder = replace_8bit_linear(self.encoder)
+        self.encoder.load_state_dict(torch.load(os.path.join(path, 'pytorch_model.bin')))
         self.conf = conf
         assert conf.metric in ['accuracy', 'mcc']
         if conf.metric == 'accuracy':
