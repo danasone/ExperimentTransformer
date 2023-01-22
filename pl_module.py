@@ -56,7 +56,7 @@ class TransformerModel(pl.LightningModule):
         self.log(f"val_{self.conf.metric}", self.metric, on_epoch=True, on_step=True)
 
     def configure_optimizers(self):
-        if conf.precision == 8:
+        if self.conf.precision == 8:
             optimizer = bnb.optim.Adam8bit(self.parameters(), lr=self.conf.optimizer.lr)
         else:
             optimizer = torch.optim.AdamW(self.parameters(), lr=self.conf.optimizer.lr)
