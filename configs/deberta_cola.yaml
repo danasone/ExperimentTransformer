@@ -1,0 +1,25 @@
+task: "cola"
+metric: "accuracy"
+precision: 32
+tokenizer: "deberta-v3-base"
+batch_size: 8
+max_length: 512
+num_epoch: 3
+
+model:
+  attention: "full"
+  num_classes: 2
+  d_model: 768
+  num_heads: 12
+  dim_feedforward: 3072
+  num_layers: 12
+  dropout: 0.1
+
+optimizer:
+  lr: 5e-5
+  T_max: 0
+
+trainer:
+  accelerator: "gpu"
+  accumulate: 4
+  log_steps: 50
