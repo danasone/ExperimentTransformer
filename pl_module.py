@@ -7,7 +7,7 @@ import torchmetrics
 import bitsandbytes as bnb
 import pytorch_lightning as pl
 from modeling import PositionalEncoding, MultiheadAttention, LinearHeadAttention, TransformerEncoderLayer, TransformerEncoder
-from transformers import DebertaV2Config, DebertaV2ModelForSequenceClassification
+from transformers import DebertaV2Config, DebertaV2ForSequenceClassification
 
 class TransformerModel(pl.LightningModule):
     def __init__(self, conf):
@@ -92,7 +92,7 @@ def replace_8bit_linear(model, threshold=6.0, module_to_not_convert="lm_head"):
 class DebertaModel(TransformerModel):
     def __init__(self, conf, path):
         super().__init__(conf)
-        self.encoder = DebertaV2ModelForSequenceClassification(DebertaV2Config.from_pretrained(path), num_classes=conf.model.num_classes)
+        self.encoder = DebertaV2ForSequenceClassification(DebertaV2Config.from_pretrained(path), num_classes=conf.model.num_classes)
         if conf.precision == 8:
             self.encoder = replace_8bit_linear(self.encoder)
         self.encoder.load_state_dict(torch.load(os.path.join(path, 'pytorch_model.bin')))
