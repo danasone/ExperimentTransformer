@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from omegaconf import OmegaConf
 from transformers import AutoTokenizer
 from dataset import GLUEDataModule
-from pl_module import TransformerModel
+from pl_module import TransformerModel, DebertaModel
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, TQDMProgressBar
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -12,6 +12,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument('--config', default='./configs/baseline.yaml')
+    parser.add_argument('--deberta-path', default='')
     args = parser.parse_args()
     
     conf = OmegaConf.load(args.config)
@@ -21,7 +22,10 @@ if __name__ == "__main__":
     data_module.setup('fit')
     if conf.optimizer.T_max == 0:
         conf.optimizer.T_max = conf.num_epoch * len(data_module.train_dataloader())
-    model = TransformerModel(conf)
+    if args.deberta_path:
+        model = DebertaModel(conf, args.deberta_path)
+    else:
+        model = TransformerModel(conf)
     
     checkpoint_callback = ModelCheckpoint(monitor=f"val_{conf.metric}", mode='max')
     lr_monitor = LearningRateMonitor(logging_interval='step')
