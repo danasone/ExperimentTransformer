@@ -4,7 +4,7 @@ precision: 32
 tokenizer: "bert-base-uncased"
 batch_size: 16
 max_length: 512
-num_epoch: 10
+num_epoch: 3
 
 model:
   attention: "linear"
