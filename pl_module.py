@@ -92,7 +92,9 @@ def replace_8bit_linear(model, threshold=6.0, module_to_not_convert="lm_head"):
 class DebertaModel(TransformerModel):
     def __init__(self, conf, path):
         super().__init__(conf)
-        self.encoder = DebertaV2ForSequenceClassification(DebertaV2Config.from_pretrained(path), num_classes=conf.model.num_classes)
+        deberta_config = DebertaV2Config.from_pretrained(path)
+        deberta_config.num_labels = num_classes
+        self.encoder = DebertaV2ForSequenceClassification(deberta_config)
         if conf.precision == 8:
             self.encoder = replace_8bit_linear(self.encoder)
         self.encoder.load_state_dict(torch.load(os.path.join(path, 'pytorch_model.bin')))
