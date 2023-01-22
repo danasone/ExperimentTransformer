@@ -72,8 +72,7 @@ def replace_8bit_linear(model, threshold=6.0, module_to_not_convert="lm_head"):
             replace_8bit_linear(module, threshold, module_to_not_convert)
 
         if isinstance(module, nn.Linear) and name != module_to_not_convert:
-            with init_empty_weights():
-                model._modules[name] = bnb.nn.Linear8bitLt(
+            model._modules[name] = bnb.nn.Linear8bitLt(
                     module.in_features,
                     module.out_features,
                     module.bias is not None,
@@ -81,8 +80,7 @@ def replace_8bit_linear(model, threshold=6.0, module_to_not_convert="lm_head"):
                     threshold=threshold,
                 )
         if isinstance(module, nn.Embedding) and name != module_to_not_convert:
-            with init_empty_weights():
-                model._modules[name] = bnb.nn.StableEmbedding(
+            model._modules[name] = bnb.nn.StableEmbedding(
                     module.num_embeddings,
                     module.embedding_dim
                 )        
