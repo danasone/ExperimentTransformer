@@ -6,6 +6,7 @@ import torchmetrics
 import bitsandbytes as bnb
 import pytorch_lightning as pl
 from modeling import PositionalEncoding, MultiheadAttention, LinearHeadAttention, TransformerEncoderLayer, TransformerEncoder
+from transformers import DebertaV2Config, DebertaV2ModelForSequenceClassification
 
 class TransformerModel(pl.LightningModule):
     def __init__(self, conf):
@@ -62,3 +63,40 @@ class TransformerModel(pl.LightningModule):
             optimizer = torch.optim.AdamW(self.parameters(), lr=self.conf.optimizer.lr)
         lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.conf.optimizer.T_max, eta_min = 0)
         return [optimizer], [lr_scheduler]
+    
+    
+def replace_8bit_linear(model, threshold=6.0, module_to_not_convert="lm_head"):
+    for name, module in model.named_children():
+        if len(list(module.children())) > 0:
+            replace_8bit_linear(module, threshold, module_to_not_convert)
+
+        if isinstance(module, nn.Linear) and name != module_to_not_convert:
+            with init_empty_weights():
+                model._modules[name] = bnb.nn.Linear8bitLt(
+                    module.in_features,
+                    module.out_features,
+                    module.bias is not None,
+                    has_fp16_weights=True,
+                    threshold=threshold,
+                )
+    return model
+    
+    
+class DebertaModel(TransformerModel):
+    def __init__(self, conf, path):
+        super().__init__(conf)
+        self.encoder = DebertaV2ModelForSequenceClassification(DebertaV2Config.from_pretrained(path), num_classes=conf.model.num_classes)
+        if conf.precision == 8:
+            self.encoder = replace_8bit_linear(self.encoder)
+        self.conf = conf
+        assert conf.metric in ['accuracy', 'mcc']
+        if conf.metric == 'accuracy':
+            self.metric = torchmetrics.Accuracy('binary')
+        elif conf.metric == 'mcc':
+            self.metric = torchmetrics.MatthewsCorrCoef('binary')
+            
+    def forward(self, x):
+        x = self.encoder(x)
+        return x.logits
+        
+            
