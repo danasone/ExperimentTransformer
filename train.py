@@ -34,3 +34,4 @@ if __name__ == "__main__":
                         logger=logger,
                         log_every_n_steps=conf.trainer.log_steps)
     trainer.fit(model, data_module)
+    trainer.validate(model, data_module)
