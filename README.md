@@ -7,7 +7,7 @@ Available config changes:
 - attention "full" (vanilla) / "linear"
 - precision 32/8 with appropriate Adam8bit
 - task of GLUE "cola" which is classofocation whether it is a grammatical English sentence with accuracy metric or "sst2" (sentiment classification) with MCC metric
-Some experiments are shown in [lab.ipynb](https://github.com/danasone/ExperimentTransformer/lab.ipynb)
+Some experiments are shown in [lab.ipynb](https://github.com/danasone/ExperimentTransformer/blob/main/lab.ipynb)
 
 Speed-test on default weights transformer because of uselessly using it for score benchmark
 | Method | Time (s) |
